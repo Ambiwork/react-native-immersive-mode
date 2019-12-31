@@ -70,7 +70,7 @@ public class RNImmersiveModeModule extends ReactContextBaseJavaModule {
                     | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
         } else {
             // set layout normal (not including layout navigation bar on bottom)
-            this.currentLayout = View.VISIBLE
+            this.currentLayout = View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                     | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
         }
 

@@ -14,9 +14,9 @@ const ImmersiveMode = {
      */
     ...RNImmersiveMode, // for constants
 
-    fullLayout(full) {
+    fullLayout(full, includeNavbar) {
         checkModule();
-        RNImmersiveMode.fullLayout(full);
+        RNImmersiveMode.fullLayout(full, includeNavbar);
     },
 
     /**
@@ -32,17 +32,27 @@ const ImmersiveMode = {
         RNImmersiveMode.setBarMode(mode);
     },
 
-    setBarStyle(style) {
+    setStatusBarStyle(style) {
         checkModule();
-        RNImmersiveMode.setBarStyle(style);
+        RNImmersiveMode.setStatusBarStyle(style);
     },
 
-    setBarTranslucent(enable) {
+    setNavBarStyle(style) {
         checkModule();
-        RNImmersiveMode.setBarTranslucent(enable);
+        RNImmersiveMode.setNavBarStyle(style);
     },
 
-    setBarColor(color) {
+    setStatusBarTranslucent(enable) {
+        checkModule();
+        RNImmersiveMode.setStatusBarTranslucent(enable);
+    },
+
+    setNavBarTranslucent(enable) {
+        checkModule();
+        RNImmersiveMode.setNavBarTranslucent(enable);
+    },
+
+    setBarColor(color, setStatusbar) {
         checkModule();
         if (typeof color === 'string') {
             if (color.length === 9) {
@@ -53,7 +63,7 @@ const ImmersiveMode = {
             }
         }
 
-        RNImmersiveMode.setBarColor(color);
+        RNImmersiveMode.setBarColor(color, setStatusbar);
     },
 
     addEventListener(callback) {

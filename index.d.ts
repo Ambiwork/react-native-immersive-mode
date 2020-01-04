@@ -11,7 +11,7 @@ type ImmersiveModeType = {
     BottomSticky: number,
 }
 
-type BarViisibilityType = {
+type BarVisibilityType = {
     statusBar: boolean,
     navigationBottomBar: boolean
 }
@@ -26,47 +26,59 @@ type ImmersiveBarModeType =
 
 
 interface ImmersiveModeStatic extends ImmersiveModeType {
-    fullLayout(full: boolean): void;
+    fullLayout(full: boolean, includeNavbar: boolean): void;
 
     /**
      * Set system ui mode.
-     * @param mode 
-     * 
-     * @deprecated use `setBarMode` instaead.
+     * @param mode
+     *
+     * @deprecated use `setBarMode` instead.
      */
     setImmersive(mode: ImmersiveModeType): void;
 
     /**
      * Set system ui mode.
-     * @param mode 
+     * @param mode
      */
     setBarMode(mode: ImmersiveBarModeType): void;
 
     /**
      * Set color of system bar.
      * When set color translucent will be disabled.
-     * 
+     *
      * @param color color hex #rrggbbaa. if color is null will set default color
      */
-    setBarColor(color: string): void;
+    setBarColor(color: string, setStatusbar: boolean): void;
 
     /**
-     * Set style of system bar.
-     * System Navigation will be Light, must be change bar color `setBarColor` to other color first.
-     * 
+     * Set style of system status bar.
+     *
      * @param style
      */
-    setBarStyle(style: ImmersiveBarStyleType): void;
+    setStatusBarStyle(style: ImmersiveBarStyleType): void;
 
     /**
-     * System bar background color is transparent 50%.
-     * When `true` bar color will be disabled.
-     * 
-     * @param enable 
+     * Set style of system nav bar.
+     *
+     * @param style
      */
-    setBarTranslucent(enable: boolean): void;
+    setNavBarStyle(style: ImmersiveBarStyleType): void;
 
-    addEventListener(callback: (viisibility: BarViisibilityType) => void): EmitterSubscription;
+    /**
+     * Set or remove system status bar translucent flag.
+     *
+     * @param enable
+     */
+    setStatusBarTranslucent(enable: boolean): void;
+
+    /**
+     * Set or remove system nav bar translucent flag.
+     *
+     * @param enable
+     */
+    setNavBarTranslucent(enable: boolean): void;
+
+    addEventListener(callback: (visibility: BarVisibilityType) => void): EmitterSubscription;
 }
 
 declare const ImmersiveMode: ImmersiveModeStatic;

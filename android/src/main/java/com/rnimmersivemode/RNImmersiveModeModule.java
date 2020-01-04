@@ -62,16 +62,21 @@ public class RNImmersiveModeModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void fullLayout(final Boolean fullscreen) {
+    public void fullLayout(final Boolean fullscreen, final Boolean drawUnderNavbar) {
         if (fullscreen) {
-            // set layout fullscreen (including layout navigation bar on bottom)
-            this.currentLayout = View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+            if (drawUnderNavbar) {
+                // set layout fullscreen (including layout navigation bar on bottom)
+                this.currentLayout = View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+            } else {
+                // set layout fullscreen (excluding navigation bar on bottom)
+                this.currentLayout = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+            }
         } else {
-            // set layout normal (not including layout navigation bar on bottom)
-            this.currentLayout = View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+            // set layout normal
+            this.currentLayout = View.VISIBLE | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
         }
 
         this.setUiOnUiThread();
@@ -151,7 +156,7 @@ public class RNImmersiveModeModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void setBarColor(final String hexColor) {
+    public void setBarColor(final String hexColor, final Boolean shouldSetStatusBar) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -160,7 +165,6 @@ public class RNImmersiveModeModule extends ReactContextBaseJavaModule {
                     Window window = activity.getWindow();
                     if (window != null) {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-
                             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
                             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
                             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
@@ -172,13 +176,18 @@ public class RNImmersiveModeModule extends ReactContextBaseJavaModule {
                                         defaultStatusColor = window.getStatusBarColor();
                                         defaultNavigationColor = window.getNavigationBarColor();
                                     }
-
-                                    window.setStatusBarColor(Color.parseColor(hexColor));
-                                    window.setNavigationBarColor(Color.parseColor(hexColor));
+                                    if (shouldSetStatusBar) {
+                                        window.setStatusBarColor(Color.parseColor(hexColor));
+                                    } else {
+                                        window.setNavigationBarColor(Color.parseColor(hexColor));
+                                    }
                                 } else if (hasColorChange) {
                                     hasColorChange = false;
-                                    window.setStatusBarColor(defaultStatusColor);
-                                    window.setNavigationBarColor(defaultNavigationColor);
+                                    if (shouldSetStatusBar) {
+                                        window.setStatusBarColor(defaultStatusColor);
+                                    } else {
+                                        window.setNavigationBarColor(defaultNavigationColor);
+                                    }
                                 }
                             } catch (Exception e) {
                                 Log.e(ModuleName, e.getMessage());
@@ -194,24 +203,27 @@ public class RNImmersiveModeModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void setBarStyle(final String style) {
+    private void setBarStyle(final String style, final Boolean shouldSetStatusBar) {
         switch (style) {
             case BarStyle.Dark:
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && shouldSetStatusBar) {
                     this.currentStatusStyle = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
                 } else {
                     Log.w(ModuleName, "Sdk Version must be >= " + Build.VERSION_CODES.M);
                 }
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !shouldSetStatusBar) {
                     this.currentNavigationStyle = View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
                 } else {
                     Log.w(ModuleName, "Sdk Version must be >= " + Build.VERSION_CODES.O);
                 }
                 break;
             case BarStyle.Light:
-                this.currentStatusStyle = View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
-                this.currentNavigationStyle = View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+                if (shouldSetStatusBar) {
+                    this.currentStatusStyle = View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+                } else {
+                    this.currentNavigationStyle = View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+                }
                 break;
         }
 
@@ -219,7 +231,16 @@ public class RNImmersiveModeModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void setBarTranslucent(final boolean enable) {
+    public void setStatusBarStyle(final String style) {
+        this.setBarStyle(style, true);
+    }
+    @ReactMethod
+    public void setNavBarStyle(final String style) {
+        this.setBarStyle(style, false);
+    }
+
+    @ReactMethod
+    private void setBarTranslucent(final Boolean enable, final Boolean shouldSetStatusBar) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -228,18 +249,26 @@ public class RNImmersiveModeModule extends ReactContextBaseJavaModule {
                     Window window = activity.getWindow();
                     if (window != null) {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            int translucentFlag = shouldSetStatusBar ? WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS : WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION;
                             if (enable) {
-                                window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-                                window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
+                                window.addFlags(translucentFlag);
                             } else {
-                                window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-                                window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
+                                window.clearFlags(translucentFlag);
                             }
                         }
                     }
                 }
             }
         });
+    }
+
+    @ReactMethod
+    public void setStatusBarTranslucent(final Boolean enable) {
+        this.setBarTranslucent(enable, true);
+    }
+    @ReactMethod
+    public void setNavBarTranslucent(final Boolean enable) {
+        this.setBarTranslucent(enable, false);
     }
 
     @ReactMethod
